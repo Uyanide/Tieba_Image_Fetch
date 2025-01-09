@@ -29,10 +29,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (_) {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.focusedChild?.unfocus();
-        }
+        FocusManager.instance.primaryFocus?.unfocus();
       },
       child: MultiProvider(
         providers: [
