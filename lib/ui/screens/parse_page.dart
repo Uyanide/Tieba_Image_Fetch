@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tieba_image_parser/providers/main_app_state.dart';
@@ -7,7 +9,6 @@ import 'package:tieba_image_parser/ui/containers.dart';
 import 'package:tieba_image_parser/ui/media/multi_image.dart';
 import 'package:tieba_image_parser/ui/media/text_display.dart';
 import 'package:tieba_image_parser/utils/error_handler.dart';
-import 'dart:ui' as ui;
 
 class ParsePage extends StatelessWidget {
   const ParsePage({super.key});
@@ -124,14 +125,7 @@ class _InputFieldState extends State<_InputField> {
               HeightMedium(
                 child: PasteInputField(
                   labelText: '帖子链接或id',
-                  onSubmitted: (value) {
-                    parseState.parse(_controller.text).catchError((error) {
-                      ErrorHandler.showErrorDialog(
-                        '解析失败',
-                        '请检查输入的链接或id是否正确 ($error)',
-                      );
-                    });
-                  },
+                  onSubmitted: (_) => Focus.of(context).unfocus(),
                   disabled: isLoading,
                   controller: _controller,
                 ),
@@ -192,8 +186,8 @@ class _OutputContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final parseState = Provider.of<ParseState>(context, listen: false);
-    return ValueListenableBuilder<List<ui.Image>>(
-      valueListenable: Provider.of<ParseState>(context).images,
+    return ValueListenableBuilder<List<Uint8List>>(
+      valueListenable: Provider.of<ParseState>(context).imgBytes,
       builder: (context, images, child) {
         if (images.isEmpty) {
           return const SizedBox();
@@ -214,7 +208,7 @@ class _OutputContainer extends StatelessWidget {
             ],
             const SizedBox(height: 10),
             MultiImage(
-              images: images,
+              images: images.map((bytes) => Image.memory(bytes)).toList(),
               isDarkMode:
                   Provider.of<MainAppState>(context, listen: true).isDarkMode,
               onPageChanged: (index) {

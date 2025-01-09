@@ -8,32 +8,17 @@ import 'package:tieba_image_parser/utils/tieba_proc.dart';
 import 'dart:ui' as ui;
 
 class ParseState extends ChangeNotifier {
-  ValueNotifier<List<ui.Image>> images = ValueNotifier<List<ui.Image>>([]);
+  ValueNotifier<List<Uint8List>> imgBytes = ValueNotifier<List<Uint8List>>([]);
   ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
   ValueNotifier<bool> canStop = ValueNotifier<bool>(false);
   ValueNotifier<String> urls = ValueNotifier<String>('');
   ValueNotifier<String> log = ValueNotifier<String>('');
   int currIndex = 0;
   final List<String> _imgUrls = [];
-  final List<Uint8List> _imgBytes = [];
 
   Isolate? _isolate;
   ReceivePort? _receivePort;
   Completer<List<String>>? _isolateCompleter;
-
-  @override
-  void dispose() {
-    disposeImages();
-    super.dispose();
-  }
-
-  void disposeImages() {
-    for (final image in images.value) {
-      image.dispose();
-    }
-    images.value.clear();
-    images.notifyListeners();
-  }
 
   Future<void> parse(String srcUrl) async {
     if (isLoading.value) return;
@@ -75,20 +60,31 @@ class ParseState extends ChangeNotifier {
         return;
       }
 
+      final tempImages = List<ui.Image?>.filled(imgUrls.length, null);
+      final tempBytes = List<Uint8List?>.filled(imgUrls.length, null);
+      final tempUrls = List<String?>.filled(imgUrls.length, null);
+
       final imgFutures = imgUrls.map((url) async {
+        if (url.isEmpty) return;
         final imageBytes = await FileIO.urlToBytes(url);
         Completer<ui.Image> completer = Completer();
         ui.decodeImageFromList(imageBytes, (image) {
           completer.complete(image);
         });
-        images.value.add(await completer.future);
-        _imgBytes.add(imageBytes);
-        _imgUrls.add(url);
+        final index = imgUrls.indexOf(url);
+        tempImages[index] = await completer.future;
+        tempBytes[index] = imageBytes;
+        tempUrls[index] = url;
       }).toList();
 
       await Future.wait(imgFutures);
+
+      imgBytes.value
+          .addAll(tempBytes.where((bytes) => bytes != null).cast<Uint8List>());
+      _imgUrls.addAll(tempUrls.where((url) => url != null).cast<String>());
+
       urls.value = _imgUrls.join('\n');
-      images.notifyListeners();
+      imgBytes.notifyListeners();
     } catch (e) {
       rethrow;
     } finally {
@@ -111,10 +107,9 @@ class ParseState extends ChangeNotifier {
   }
 
   void clear() {
-    disposeImages();
-    images.notifyListeners();
     _imgUrls.clear();
-    _imgBytes.clear();
+    imgBytes.value.clear();
+    imgBytes.notifyListeners();
     urls.value = '';
     log.value = '';
   }
@@ -189,34 +184,35 @@ class ParseState extends ChangeNotifier {
   }
 
   Future<String> saveCurrImage() async {
-    if (images.value.isEmpty) {
+    if (imgBytes.value.isEmpty) {
       throw Exception('No image to save');
     }
-    return await _saveImage(
-      _imgBytes[currIndex % images.value.length],
-      _imgUrls[currIndex % _imgUrls.length],
-    );
+    final bytes = imgBytes.value[currIndex % imgBytes.value.length];
+    final url = _imgUrls[currIndex % _imgUrls.length];
+    return await _saveImage(bytes, url);
   }
 
   Future<String> saveAllImages() async {
-    if (images.value.isEmpty) {
+    if (imgBytes.value.isEmpty) {
       throw Exception('No image to save');
     }
 
-    final futures = images.value.map((image) async {
-      final index = images.value.indexOf(image);
-      return await _saveImage(_imgBytes[index % images.value.length],
-          _imgUrls[index % _imgUrls.length]);
+    final futures = imgBytes.value.map((bytes) async {
+      final index = imgBytes.value.indexOf(bytes);
+      final url = _imgUrls[index % _imgUrls.length];
+      return await _saveImage(bytes, url);
     }).toList();
 
-    return await Future.wait(futures).then((value) => value.join('\n'));
+    final results = await Future.wait(futures);
+    return results.where((result) => result.isNotEmpty).join('\n');
   }
 
   Future<void> copyCurrentUrl() async {
-    if (images.value.isEmpty) {
+    if (imgBytes.value.isEmpty) {
       throw Exception('No image to copy');
     }
-    await FileIO.copyToClipboard(_imgUrls[currIndex % images.value.length]);
+    final url = _imgUrls[currIndex % _imgUrls.length];
+    await FileIO.copyToClipboard(url);
   }
 
   Future<void> _protector() async {

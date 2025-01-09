@@ -1,5 +1,5 @@
 name: tieba_image_parser
-description: 'A new Flutter project.'
+description: 'Parse original images from threads in Tieba.'
 publish_to: 'none'
 version: 0.1.0
 

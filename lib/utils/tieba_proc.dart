@@ -178,6 +178,7 @@ class TiebaOrigImageParser {
 
   Future<void> _fetchDetailPages() async {
     final futures = <Future<void>>[];
+    final picUrls = List.filled(_detailUrls.length, '');
     for (final url in _detailUrls) {
       Completer<void> completer = Completer();
       futures.add(completer.future);
@@ -189,7 +190,7 @@ class TiebaOrigImageParser {
         }
         final picUrl =
             doc.outerHtml.substring(waterurlIndex + 11).split('"')[0];
-        _picUrls.add(picUrl);
+        picUrls[_detailUrls.indexOf(url)] = picUrl;
         completer.complete();
       }).catchError((e) {
         _log('Failed to fetch detail page: $e');
@@ -197,6 +198,7 @@ class TiebaOrigImageParser {
       });
     }
     await Future.wait(futures);
+    _picUrls.addAll(picUrls);
   }
 
   @pragma('vm:prefer-inline')

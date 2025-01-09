@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:tieba_image_parser/ui/animated_carousel.dart';
 import 'package:tieba_image_parser/ui/containers.dart';
 import 'package:tieba_image_parser/ui/media/image_display.dart';
-import 'dart:ui' as ui;
 
 class MultiImage extends StatelessWidget {
-  final List<ui.Image> images;
+  final List<Image> images;
   final bool isDarkMode;
   final Function(int)? onPageChanged;
 

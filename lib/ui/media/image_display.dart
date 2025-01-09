@@ -1,10 +1,8 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:tieba_image_parser/ui/containers.dart';
 
 class ImageDisplay extends StatelessWidget {
-  final ui.Image? image;
+  final Image? image;
   final String? titleText;
   final GestureTapCallback? onTap;
   final bool isDarkMode;
@@ -17,7 +15,7 @@ class ImageDisplay extends StatelessWidget {
     required this.isDarkMode,
   });
 
-  void showFocused(BuildContext context, {ui.Image? image, Color? color}) {
+  void showFocused(BuildContext context, {Image? image, Color? color}) {
     if (image == null) {
       return;
     }
@@ -63,14 +61,11 @@ class ImageDisplay extends StatelessWidget {
                       ),
               child: SizedBox(
                 width: constraints.maxWidth,
-                height: constraints.maxWidth * image!.height / image!.width,
                 child: FittedBox(
                   fit: BoxFit.cover,
                   child: Container(
                     color: isDarkMode ? Colors.black : Colors.white,
-                    child: RawImage(
-                      image: image,
-                    ),
+                    child: image,
                   ),
                 ),
               ),
@@ -88,7 +83,7 @@ class ImageDialog extends StatelessWidget {
     required this.color,
   });
 
-  final ui.Image image;
+  final Image image;
   final Color color;
 
   @override
@@ -100,9 +95,7 @@ class ImageDialog extends StatelessWidget {
             child: Center(
               child: Container(
                 color: color,
-                child: RawImage(
-                  image: image,
-                ),
+                child: image,
               ),
             ),
           ),

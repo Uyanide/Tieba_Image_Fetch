@@ -22,7 +22,9 @@ class MainDrawer extends StatelessWidget {
           ListTile(
             title: Text(
               '检查更新',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
             ),
             onTap: () {
               context.read<MainAppState>().checkUpdate();
@@ -57,9 +59,9 @@ class AuthorInfo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CircleAvatar(
-          radius: 30,
-          backgroundImage: AssetImage('assets/avatar.jpg'),
-        ),
+            radius: 30,
+            backgroundImage: NetworkImage(
+                'https://avatars.githubusercontent.com/u/125987950?v=4')),
         SizedBox(width: 10),
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -142,7 +144,7 @@ class _VersionInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '(做着玩的小东西😌)',
+            '(做着玩的小玩意😌)',
             style: Theme.of(context).textTheme.labelMedium!.copyWith(
                   color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -21,6 +22,36 @@ class ErrorHandler {
                   Navigator.of(context).pop();
                   onPressed?.call();
                 }),
+          ],
+        );
+      },
+    );
+  }
+
+  static void showUpdateDialog(String version, String changelog) {
+    if (navigatorKey.currentContext == null) return;
+    final navigator = Navigator.of(navigatorKey.currentContext!);
+    showDialog(
+      context: navigator.overlay!.context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('新版本已发布: $version'),
+          content: Text(changelog),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('下载地址'),
+              onPressed: () {
+                launchUrl(Uri.parse(
+                    'https://github.com/Uyanide/Tieba_Image_Fetch/releases'));
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('我晓得了'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
           ],
         );
       },
