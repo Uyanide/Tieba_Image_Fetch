@@ -63,6 +63,10 @@ class ParseState extends ChangeNotifier {
         return;
       }
 
+      log.value.isEmpty
+          ? log.value = 'Fetching ${imgUrls.length} images...'
+          : log.value += '\nFetching ${imgUrls.length} images...';
+
       final tempImages = List<ui.Image?>.filled(imgUrls.length, null);
       final tempBytes = List<Uint8List?>.filled(imgUrls.length, null);
       final tempUrls = List<String?>.filled(imgUrls.length, null);

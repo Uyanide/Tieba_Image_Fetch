@@ -13,6 +13,7 @@ class TiebaOrigImageParser {
   String? _threadAuthor;
 
   final List<String> _detailUrls = [];
+  late List<List<String>> _detailUrlsGroup;
   final List<String> _picUrls = [];
 
   late final Function(String) _logCallback;
@@ -25,6 +26,7 @@ class TiebaOrigImageParser {
   }) : _logCallback = logCallback {
     _parseInput(input);
     _fetchThreadPages().catchError((e) {
+      _log('Parser failed: $e', isError: true);
       _completer.completeError(e);
     });
   }
@@ -35,8 +37,8 @@ class TiebaOrigImageParser {
   }
 
   @pragma('vm:prefer-inline')
-  void _log(String msg) {
-    _logCallback('- TiebaOrigImageParser: $msg');
+  void _log(String msg, {bool isError = false}) {
+    _logCallback('${isError ? ' -ERROR- ' : ' -INFO- '}: $msg');
   }
 
   void _parseInput(String input) {
@@ -53,29 +55,46 @@ class TiebaOrigImageParser {
   }
 
   Future<void> _fetchThreadPages() async {
+    _log('Fetching first page...');
     var doc = await _fetchPage(_threadUrl);
+    _log('Parsing thread info...');
     _parsePageNumber(doc);
     _parseChannelName(doc);
 
+    _detailUrlsGroup = List.generate(_pageNumber, (_) => <String>[]);
+    final futures = <Future<void>>[];
+
     for (var pn = 1; pn <= _pageNumber; pn++) {
+      final completer = Completer<void>();
       if (pn != 1) {
-        try {
-          doc = await _fetchPage('$_threadUrl?pn=$pn');
-        } catch (e) {
-          _log('Failed to fetch page $pn: $e, skipping');
-          continue;
-        }
+        _log('Fetching page $pn...');
+        _fetchPage('$_threadUrl?pn=$pn').then((doc) {
+          _log('Parsing page $pn...');
+          _parsePage(doc, pn);
+          completer.complete();
+        }).catchError((e) {
+          _log('Failed to fetch page $pn: $e', isError: true);
+          completer.completeError(e);
+        });
+      } else {
+        _log('Parsing page $pn...');
+        _parsePage(doc, pn);
+        completer.complete();
       }
-      _parsePage(doc);
+      futures.add(completer.future);
     }
 
+    await Future.wait(futures);
+    _detailUrls.addAll(_detailUrlsGroup.expand((e) => e));
+
+    _log('Fetching ${_detailUrls.length} detail pages...');
     await _fetchDetailPages();
 
+    _log('Parsing completed, ${_picUrls.length} images found.');
     _completer.complete();
   }
 
   Future<Document> _fetchPage(String url) async {
-    _log('Fetching page: $url');
     final bytes = await WebIO.get(url);
 
     Document doc = parse(String.fromCharCodes(bytes));
@@ -108,7 +127,6 @@ class TiebaOrigImageParser {
         break;
     }
 
-    _log('Fetched page: $url');
     return doc;
   }
 
@@ -126,7 +144,7 @@ class TiebaOrigImageParser {
       throw Exception('Failed to parse page number');
     }
     _pageNumber = pageNum;
-    _log('Page number: $_pageNumber');
+    _log('Total pages: $_pageNumber');
   }
 
   void _parseChannelName(Document doc) {
@@ -138,7 +156,7 @@ class TiebaOrigImageParser {
     _log('Channel name: $_channelName');
   }
 
-  void _parsePage(Document doc) {
+  void _parsePage(Document doc, [int pageNumber = 1]) {
     final posts = doc.querySelectorAll('.l_post');
     for (final post in posts) {
       final postId = post.attributes['data-pid'];
@@ -158,12 +176,13 @@ class TiebaOrigImageParser {
           continue;
         }
         final picId = src.split('/').last.split('.').first;
-        _detailUrls.add(_generateDetailUrl(author, postId, picId));
+        _detailUrlsGroup[pageNumber - 1]
+            .add(_generateDetailUrl(author, postId, picId));
         imageCount++;
       }
 
-      _log(
-          'Post parsed: postId=$postId, imageCount=$imageCount, author=$author');
+      _log('Post parsed: id: $postId');
+      _log('Images found in the post: $imageCount, author: $author');
     }
   }
 
@@ -184,7 +203,7 @@ class TiebaOrigImageParser {
         picUrls[_detailUrls.indexOf(url)] = picUrl;
         completer.complete();
       }).catchError((e) {
-        _log('Failed to fetch detail page: $e');
+        _log('Failed to fetch detail page: $e', isError: true);
         completer.complete();
       });
     }
