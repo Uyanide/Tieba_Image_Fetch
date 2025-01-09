@@ -1,0 +1,3 @@
+[submodule "lib/socks/socks_dart"]
+	path = lib/socks/socks_dart
+	url = https://github.com/Uyanide/socks_dart.git
