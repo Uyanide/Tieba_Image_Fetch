@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:tieba_image_parser/socks/socks_dart/lib/socks_client.dart'
-    as socks;
+import 'package:socks5_proxy/socks_client.dart' as socks;
 
 class ProxyConfig {
   static const List<String> types = ['none', 'http', 'socks5'];
