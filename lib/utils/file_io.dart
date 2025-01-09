@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:gal/gal.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 
 class FileIO {
@@ -62,33 +62,42 @@ class FileIO {
     return data.buffer.asUint8List();
   }
 
-  static Future<Uint8List> urlToBytes(String url) async {
-    final http.Response response = await http
-        .get(Uri.parse('https://api.uyanide.com/proxy/?url=$url'))
-        .timeout(const Duration(seconds: 20), onTimeout: () {
-      throw Exception('Request timed out');
-    });
-    if (response.statusCode != 200) {
-      throw Exception('Request failed with status: ${response.statusCode}');
-    }
-    return response.bodyBytes;
-  }
+  // static Future<Uint8List> urlToBytes(
+  //   String url, {
+  //   bool mockUserAgent = true,
+  // }) async {
+  //   final http.Response response = await http
+  //       .get(Uri.parse(url),
+  //           headers: mockUserAgent
+  //               ? {
+  //                   'User-Agent':
+  //                       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+  //                 }
+  //               : null)
+  //       .timeout(const Duration(seconds: 20), onTimeout: () {
+  //     throw Exception('Request timed out');
+  //   });
+  //   if (response.statusCode != 200) {
+  //     throw Exception('Request failed with status: ${response.statusCode}');
+  //   }
+  //   return response.bodyBytes;
+  // }
 
-  static Future<String> getMimeTypeFromUrl(String url) async {
-    final http.Response response = await http
-        .head(Uri.parse(url))
-        .timeout(const Duration(seconds: 20), onTimeout: () {
-      throw Exception('Request timed out');
-    });
-    if (response.statusCode != 200) {
-      throw Exception('Request failed with status: ${response.statusCode}');
-    }
-    final mimeType = response.headers['content-type'];
-    if (mimeType == null) {
-      throw Exception('Could not determine MIME type');
-    }
-    return mimeType;
-  }
+  // static Future<String> getMimeTypeFromUrl(String url) async {
+  //   final http.Response response = await http
+  //       .head(Uri.parse(url))
+  //       .timeout(const Duration(seconds: 20), onTimeout: () {
+  //     throw Exception('Request timed out');
+  //   });
+  //   if (response.statusCode != 200) {
+  //     throw Exception('Request failed with status: ${response.statusCode}');
+  //   }
+  //   final mimeType = response.headers['content-type'];
+  //   if (mimeType == null) {
+  //     throw Exception('Could not determine MIME type');
+  //   }
+  //   return mimeType;
+  // }
 
   static String? getMimeTypeFromPath(String path) {
     return lookupMimeType(path);

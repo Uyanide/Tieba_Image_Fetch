@@ -24,6 +24,9 @@ class _TextDisplayState extends State<TextDisplay> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.text == null || widget.text!.isEmpty) {
+      return const NullContainer();
+    }
     return Stack(
       children: [
         InputContainer(

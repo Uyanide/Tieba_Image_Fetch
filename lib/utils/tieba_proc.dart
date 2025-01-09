@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
-import 'package:http/http.dart' as http;
+import 'package:tieba_image_parser/utils/web_io.dart';
 
 class TiebaOrigImageParser {
   late final String _threadUrl;
@@ -76,16 +76,7 @@ class TiebaOrigImageParser {
 
   Future<Document> _fetchPage(String url) async {
     _log('Fetching page: $url');
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
-      },
-    ).timeout(const Duration(seconds: 20), onTimeout: () {
-      throw Exception('Request timed out');
-    });
-    final bytes = response.bodyBytes;
+    final bytes = await WebIO.get(url);
 
     Document doc = parse(String.fromCharCodes(bytes));
 

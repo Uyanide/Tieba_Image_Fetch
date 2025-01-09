@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tieba_image_parser/providers/main_app_state.dart';
 import 'package:tieba_image_parser/providers/parse_state.dart';
+import 'package:tieba_image_parser/providers/settings_state.dart';
 import 'package:tieba_image_parser/ui/common_input.dart';
 import 'package:tieba_image_parser/ui/containers.dart';
 import 'package:tieba_image_parser/ui/media/multi_image.dart';
@@ -139,11 +140,12 @@ class _InputFieldState extends State<_InputField> {
                           text: '开始解析',
                           onPressed: () {
                             parseState
-                                .parse(_controller.text)
+                                .parse(_controller.text,
+                                    context.read<SettingsState>().proxyConfig)
                                 .catchError((error) {
                               ErrorHandler.showErrorDialog(
                                 '解析失败',
-                                '请检查输入的链接或id是否正确 ($error)',
+                                '请检查输入或代理设置是否正确 ($error)',
                               );
                             });
                           },
@@ -189,9 +191,9 @@ class _OutputContainer extends StatelessWidget {
     return ValueListenableBuilder<List<Uint8List>>(
       valueListenable: Provider.of<ParseState>(context).imgBytes,
       builder: (context, images, child) {
-        if (images.isEmpty) {
-          return const SizedBox();
-        }
+        // if (images.isEmpty) {
+        //   return const SizedBox();
+        // }
         return Column(
           children: [
             Divider(height: 30),
@@ -204,9 +206,9 @@ class _OutputContainer extends StatelessWidget {
               Text(
                 '(图片预览显示可能不完全，请点击图片查看大图)',
                 style: Theme.of(context).textTheme.bodySmall,
-              )
+              ),
+              const SizedBox(height: 10),
             ],
-            const SizedBox(height: 10),
             MultiImage(
               images: images.map((bytes) => Image.memory(bytes)).toList(),
               isDarkMode:
@@ -311,9 +313,9 @@ class _UrlContainer extends StatelessWidget {
     return ValueListenableBuilder<String>(
       valueListenable: Provider.of<ParseState>(context).urls,
       builder: (context, urls, child) {
-        if (urls.isEmpty) {
-          return const SizedBox();
-        }
+        // if (urls.isEmpty) {
+        //   return const SizedBox();
+        // }
         return Column(
           children: [
             Divider(height: 30),

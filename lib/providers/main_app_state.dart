@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:tieba_image_parser/utils/error_handler.dart';
-import 'package:tieba_image_parser/utils/file_io.dart';
+import 'package:tieba_image_parser/utils/web_io.dart';
 
 class MainAppState extends ChangeNotifier with WidgetsBindingObserver {
   late bool isDarkMode;
@@ -23,7 +23,7 @@ class MainAppState extends ChangeNotifier with WidgetsBindingObserver {
       version = value;
       notifyListeners();
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        checkUpdate();
+        checkUpdate(showSuccess: false);
       });
     });
   }
@@ -58,14 +58,20 @@ class MainAppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> checkUpdate() async {
-    final jsonStr = utf8.decode(await FileIO.urlToBytes(
-        'https://api.uyanide.com/tieba-image-fetch/latest-version'));
-    final latestVersion = json.decode(jsonStr)['version'];
-    final changeLog = json.decode(jsonStr)['changeLog'];
-    if (latestVersion != version) {
-      ErrorHandler.logCommon('New version available: $latestVersion');
-      ErrorHandler.showUpdateDialog(latestVersion, changeLog);
+  Future<void> checkUpdate({bool showSuccess = true}) async {
+    try {
+      final jsonStr = utf8.decode(await WebIO.get(
+          'https://api.uyanide.com/tieba-image-fetch/latest-version'));
+      final latestVersion = json.decode(jsonStr)['version'];
+      final changeLog = json.decode(jsonStr)['changeLog'];
+      if (latestVersion != version) {
+        ErrorHandler.logCommon('New version available: $latestVersion');
+        ErrorHandler.showUpdateDialog(latestVersion, changeLog);
+      } else if (showSuccess) {
+        ErrorHandler.showErrorDialog('🎉恭喜🎉', '已是最新版本');
+      }
+    } catch (e, s) {
+      ErrorHandler.logError(e, s);
     }
   }
 

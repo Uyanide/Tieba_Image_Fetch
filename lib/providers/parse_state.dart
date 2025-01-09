@@ -7,6 +7,8 @@ import 'package:tieba_image_parser/utils/file_io.dart';
 import 'package:tieba_image_parser/utils/tieba_proc.dart';
 import 'dart:ui' as ui;
 
+import 'package:tieba_image_parser/utils/web_io.dart';
+
 class ParseState extends ChangeNotifier {
   ValueNotifier<List<Uint8List>> imgBytes = ValueNotifier<List<Uint8List>>([]);
   ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
@@ -20,7 +22,7 @@ class ParseState extends ChangeNotifier {
   ReceivePort? _receivePort;
   Completer<List<String>>? _isolateCompleter;
 
-  Future<void> parse(String srcUrl) async {
+  Future<void> parse(String srcUrl, ProxyConfig proxyConfig) async {
     if (isLoading.value) return;
     try {
       if (srcUrl.isEmpty) return;
@@ -43,6 +45,7 @@ class ParseState extends ChangeNotifier {
       _receivePort!.listen((message) {
         if (sendPort == null) {
           sendPort = message as SendPort;
+          sendPort!.send(proxyConfig);
           sendPort!.send(srcUrl);
         } else if (message is Exception) {
           _isolateCompleter!.completeError(message);
@@ -66,7 +69,7 @@ class ParseState extends ChangeNotifier {
 
       final imgFutures = imgUrls.map((url) async {
         if (url.isEmpty) return;
-        final imageBytes = await FileIO.urlToBytes(url);
+        final imageBytes = await WebIO.get(url);
         Completer<ui.Image> completer = Completer();
         ui.decodeImageFromList(imageBytes, (image) {
           completer.complete(image);
@@ -118,18 +121,28 @@ class ParseState extends ChangeNotifier {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
 
-    receivePort.listen((message) async {
-      final srcUrl = message as String;
-      try {
-        final imgUrls = await TiebaOrigImageParser(
-          input: srcUrl,
-          logCallback: (log) => sendPort.send(log),
-        ).getResults();
-        sendPort.send(imgUrls);
-      } catch (e) {
-        sendPort.send(e is Exception ? e : Exception(e.toString()));
-      }
-    });
+    Completer<void>? proxyCompleter = Completer();
+
+    receivePort.listen(
+      (message) async {
+        if (message is ProxyConfig) {
+          WebIO.setProxy(message).then((_) => proxyCompleter!.complete());
+        } else {
+          await proxyCompleter!.future;
+          proxyCompleter = null;
+          final srcUrl = message as String;
+          try {
+            final imgUrls = await TiebaOrigImageParser(
+              input: srcUrl,
+              logCallback: (log) => sendPort.send(log),
+            ).getResults();
+            sendPort.send(imgUrls);
+          } catch (e) {
+            sendPort.send(e is Exception ? e : Exception(e.toString()));
+          }
+        }
+      },
+    );
   }
 
   // a little dumb. however, unfortunately there aren't any faster ways

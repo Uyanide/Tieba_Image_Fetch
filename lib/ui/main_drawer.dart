@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tieba_image_parser/providers/main_app_state.dart';
+import 'package:tieba_image_parser/ui/proxy_setting.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,21 @@ class MainDrawer extends StatelessWidget {
             onTap: () {
               context.read<MainAppState>().checkUpdate();
             },
-          )
+          ),
+          ListTile(
+            title: Text(
+              '代理配置',
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+            ),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => const ProxySetting(),
+              );
+            },
+          ),
         ],
       ),
     );

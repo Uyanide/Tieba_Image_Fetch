@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// import 'package:tieba_image_parser/utils/error_handler.dart';
 
 // import 'package:tieba_image_parser/ui/containers.dart';
 // import 'package:tieba_image_parser/utils/error_handler.dart';
@@ -138,7 +139,6 @@ class HeightConfiguration {
 //                 ),
 //               ),
 //               onPressed: () {
-//                 Focus.of(context).unfocus();
 //                 onSubmitted(controller.text);
 //               },
 //             ),
@@ -148,6 +148,39 @@ class HeightConfiguration {
 //     );
 //   }
 // }
+
+class CommonInputField extends StatelessWidget {
+  final String labelText;
+  final TextEditingController controller;
+  final bool disabled;
+  final bool obscureText;
+
+  const CommonInputField({
+    super.key,
+    required this.labelText,
+    required this.controller,
+    this.disabled = false,
+    this.obscureText = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+        labelText: labelText,
+        labelStyle: Theme.of(context).textTheme.labelMedium,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      style: Theme.of(context).textTheme.labelMedium,
+      enabled: !disabled,
+      obscureText: obscureText,
+    );
+  }
+}
 
 class PasteInputField extends StatelessWidget {
   final String labelText;
@@ -217,8 +250,6 @@ class PasteInputField extends StatelessWidget {
                 onPressed: disabled
                     ? null
                     : () {
-                        Focus.of(context).unfocus();
-
                         Clipboard.getData(Clipboard.kTextPlain).then(
                           (clipboardContent) {
                             if (clipboardContent != null) {
@@ -447,70 +478,70 @@ class CommonCheckbox extends StatelessWidget {
 //   }
 // }
 
-// class CommonSegButton extends StatelessWidget {
-//   final List<String> items;
-//   final int value;
-//   final Function(int) onChanged;
-//   final bool disabled;
+class CommonSegButton extends StatelessWidget {
+  final List<String> items;
+  final int value;
+  final Function(int) onChanged;
+  final bool disabled;
 
-//   const CommonSegButton({
-//     super.key,
-//     required this.items,
-//     required this.value,
-//     required this.onChanged,
-//     this.disabled = false,
-//   });
+  const CommonSegButton({
+    super.key,
+    required this.items,
+    required this.value,
+    required this.onChanged,
+    this.disabled = false,
+  });
 
-//   @override
-//   Widget build(BuildContext context) {
-//     // return ToggleButtons(
-//     //   isSelected: List.generate(items.length, (index) => index == value),
-//     //   onPressed: disabled ? null : onChanged,
-//     //   borderRadius: BorderRadius.circular(8),
-//     //   selectedColor: Theme.of(context).colorScheme.onPrimary,
-//     //   fillColor: Theme.of(context).colorScheme.primary,
-//     //   children: items
-//     //       .map(
-//     //         (item) => Padding(
-//     //           padding: EdgeInsets.symmetric(horizontal: 10),
-//     //           child: Text(
-//     //             item,
-//     //             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-//     //                   color: items.indexOf(item) == value
-//     //                       ? disabled
-//     //                           ? Theme.of(context).colorScheme.onPrimary
-//     //                           : Theme.of(context).colorScheme.onPrimary
-//     //                       : Theme.of(context).colorScheme.primary,
-//     //                 ),
-//     //           ),
-//     //         ),
-//     //       )
-//     //       .toList(),
-//     // );
-//     return SegmentedButton<String>(
-//       segments: [
-//         for (var item in items)
-//           ButtonSegment<String>(
-//             value: item,
-//             label: Text(
-//               item,
-//               style: Theme.of(context).textTheme.labelMedium,
-//             ),
-//           ),
-//       ],
-//       selected: {items[value]},
-//       onSelectionChanged: disabled
-//           ? null
-//           : (Set<String> newSelection) {
-//               onChanged(items.indexOf(newSelection.first));
-//             },
-//       style: ButtonStyle(
-//         shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-//           RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(8),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    // return ToggleButtons(
+    //   isSelected: List.generate(items.length, (index) => index == value),
+    //   onPressed: disabled ? null : onChanged,
+    //   borderRadius: BorderRadius.circular(8),
+    //   selectedColor: Theme.of(context).colorScheme.onPrimary,
+    //   fillColor: Theme.of(context).colorScheme.primary,
+    //   children: items
+    //       .map(
+    //         (item) => Padding(
+    //           padding: EdgeInsets.symmetric(horizontal: 10),
+    //           child: Text(
+    //             item,
+    //             style: Theme.of(context).textTheme.labelMedium?.copyWith(
+    //                   color: items.indexOf(item) == value
+    //                       ? disabled
+    //                           ? Theme.of(context).colorScheme.onPrimary
+    //                           : Theme.of(context).colorScheme.onPrimary
+    //                       : Theme.of(context).colorScheme.primary,
+    //                 ),
+    //           ),
+    //         ),
+    //       )
+    //       .toList(),
+    // );
+    return SegmentedButton<String>(
+      segments: [
+        for (var item in items)
+          ButtonSegment<String>(
+            value: item,
+            label: Text(
+              item,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+      ],
+      selected: {items[value]},
+      onSelectionChanged: disabled
+          ? null
+          : (Set<String> newSelection) {
+              onChanged(items.indexOf(newSelection.first));
+            },
+      style: ButtonStyle(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+    );
+  }
+}
