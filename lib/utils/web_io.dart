@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:socks5_proxy/socks_client.dart' as socks;
+import 'package:tieba_image_parser/utils/pair.dart';
 
 class ProxyConfig {
   static const List<String> types = ['none', 'http', 'socks5'];
@@ -10,6 +13,20 @@ class ProxyConfig {
   String port = '';
   String username = '';
   String password = '';
+
+  @override
+  String toString() {
+    if (type == 'none') {
+      return '无代理';
+    }
+    if (type == 'http') {
+      return 'HTTP 代理: ${username.isNotEmpty ? '$username@' : ''}$host:$port';
+    }
+    if (type == 'socks5') {
+      return 'SOCKS5 代理: ${username.isNotEmpty ? '$username@' : ''}$host:$port';
+    }
+    return '未知代理类型';
+  }
 }
 
 class WebIO {
@@ -20,6 +37,7 @@ class WebIO {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
     ..connectionTimeout = const Duration(seconds: 30);
 
+  /// Create a new HttpClient instance with the given [proxyConfig].
   static Future<void> setProxy(ProxyConfig proxyConfig) async {
     if (proxyConfig.type == 'none') {
       _client = _newClient;
@@ -59,14 +77,51 @@ class WebIO {
     }
   }
 
-  static Future<Uint8List> get(String url) async {
+  // static bool get _isInDebugMode {
+  //   var inDebugMode = false;
+  //   assert(inDebugMode = true);
+  //   return inDebugMode;
+  // }
+
+  static List<Pair<String, Completer<Uint8List>>> urlQueue = [];
+  static bool _isProcessing = false;
+
+  static Future<Uint8List> get(String url, [int delay = 500]) async {
+    Completer<Uint8List> completer = Completer();
+    urlQueue.add(Pair(url, completer));
+    if (!_isProcessing) {
+      _isProcessing = true;
+      _cycle(delay);
+    }
+    return completer.future;
+  }
+
+  static Future<void> _cycle(int delay) async {
+    final random = Random();
+    while (urlQueue.isNotEmpty) {
+      final pair = urlQueue.removeAt(0);
+      _get(pair.first).then((bytes) {
+        pair.second.complete(bytes);
+      }).catchError((e) {
+        pair.second.completeError(e);
+      });
+      await Future.delayed(Duration(
+          milliseconds: delay + random.nextInt(delay * 2 ~/ 5) - delay ~/ 5));
+    }
+    _isProcessing = false;
+  }
+
+  static Future<Uint8List> _get(String url) async {
+    print('GET $url');
     final request = await _client.getUrl(Uri.parse(url));
     final response = await request.close();
     if (response.statusCode != 200) {
       throw Exception('Request failed with status: ${response.statusCode}');
+    } else {
+      final bytes = await response.fold<Uint8List>(Uint8List(0), (bytes, data) {
+        return Uint8List.fromList(bytes + data);
+      });
+      return bytes;
     }
-    return await response.fold<Uint8List>(Uint8List(0), (bytes, data) {
-      return Uint8List.fromList(bytes + data);
-    });
   }
 }

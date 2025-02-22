@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tieba_image_parser/providers/main_app_state.dart';
+import 'package:tieba_image_parser/providers/settings_state.dart';
 import 'package:tieba_image_parser/ui/proxy_setting.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
@@ -18,33 +19,39 @@ class MainDrawer extends StatelessWidget {
             ),
             child: AuthorInfo(),
           ),
-          const _VersionInfo(),
+          const _SubInfo(),
           _Divider(),
-          ListTile(
-            title: Text(
-              '检查更新',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-            ),
+          _ConfigItem(
+            title: '检查更新',
+            detail: '当前版本: ${context.read<MainAppState>().version}',
             onTap: () {
               context.read<MainAppState>().checkUpdate();
             },
           ),
-          ListTile(
-            title: Text(
-              '代理配置',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-            ),
+          // ListTile(
+          //   title: Text(
+          //     '代理配置',
+          //     style: Theme.of(context).textTheme.titleMedium!.copyWith(
+          //           color: Theme.of(context).colorScheme.onSecondaryContainer,
+          //         ),
+          //   ),
+          //   onTap: () {
+          //     showDialog(
+          //       context: context,
+          //       builder: (context) => const ProxySetting(),
+          //     );
+          //   },
+          // ),
+          _ConfigItem(
+            title: '代理配置',
+            detail: context.watch<SettingsState>().proxyConfig.toString(),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (context) => const ProxySetting(),
               );
             },
-          ),
+          )
         ],
       ),
     );
@@ -148,8 +155,8 @@ class _LinkIcon extends StatelessWidget {
   }
 }
 
-class _VersionInfo extends StatelessWidget {
-  const _VersionInfo();
+class _SubInfo extends StatelessWidget {
+  const _SubInfo();
 
   @override
   Widget build(BuildContext context) {
@@ -159,20 +166,53 @@ class _VersionInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            '听说有人不会下载原图？',
+            style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+          ),
+          const SizedBox(height: 5),
+          Text(
             '(做着玩的小玩意😌)',
             style: Theme.of(context).textTheme.labelMedium!.copyWith(
                   color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            '当前版本: ${context.read<MainAppState>().version}',
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _ConfigItem extends StatelessWidget {
+  final String title;
+  final String? detail;
+  final VoidCallback onTap;
+
+  const _ConfigItem({
+    required this.title,
+    required this.onTap,
+    this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+      ),
+      subtitle: detail != null
+          ? Text(
+              detail!,
+              style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+            )
+          : null,
+      onTap: onTap,
     );
   }
 }

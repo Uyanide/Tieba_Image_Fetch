@@ -79,6 +79,7 @@ class SettingsState extends ChangeNotifier {
     if (_isApplying) return;
     _isApplying = true;
     await WebIO.setProxy(_proxyConfig);
+    notifyListeners();
     _isApplying = false;
   }
 }

@@ -38,7 +38,7 @@ class TiebaOrigImageParser {
 
   @pragma('vm:prefer-inline')
   void _log(String msg, {bool isError = false}) {
-    _logCallback('${isError ? ' -ERROR- ' : ' -INFO- '}: $msg');
+    _logCallback('${isError ? ' ERROR ' : ' INFO '}: $msg');
   }
 
   void _parseInput(String input) {
